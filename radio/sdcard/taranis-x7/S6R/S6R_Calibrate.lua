@@ -15,6 +15,8 @@ local pages = {}
 local fields = {}
 local modifications = {}
 local positionConfirmed = 0
+local positionHold = 0
+local holdTimer = 0
 local orientationAutoSense = 0
 
 local calibrationFields = {
@@ -134,6 +136,9 @@ local function refreshNext()
             local b2 = math.floor(value / 256)
             value = b1*256 + b2
             value = value - bit32.band(value, 0x8000) * 2
+            if ((getTime()-100) > holdTimer) then
+              positionHold = 0
+            end
           end
           if field[2] == COMBO and #field == 6 then
             for index = 1, #(field[6]), 1 do
@@ -195,6 +200,11 @@ local function runFieldsPage(event)
   return 0
 end
 
+local function drawPositionHoldScreen()
+  lcd.drawText(9, 15, "DO  NOT MOVE RECEIVER", 0)
+  lcd.drawText(2, 35, "CALIBRATION IN PROGRESS", 0)
+end
+
 local function drawCalibrationOrientation(x, y, step)
     local orientation = { {"Label up.", "", 0, 0, 1000, 0, 0, 1000},
                             {"Label down.", "", 0, 0, -1000, 0, 0, -1000},
@@ -207,6 +217,7 @@ local function drawCalibrationOrientation(x, y, step)
     lcd.drawText(x-9, y, orientation[step][1])
     lcd.drawText(x-9, y+10, orientation[step][2])
     local positionStatus = 0
+
     for index = 1, 3, 1 do
       local field = fields[index]
       lcd.drawText(90, 12+10*index, field[1], 0)
@@ -227,6 +238,10 @@ local function drawCalibrationOrientation(x, y, step)
 end
 
 local function runCalibrationPage(event)
+  if (positionHold == 1) then
+    drawPositionHoldScreen()
+    return 0
+  end
   fields = calibrationFields
   if refreshIndex == #fields then
     refreshIndex = 0
@@ -248,6 +263,8 @@ local function runCalibrationPage(event)
   elseif event == EVT_ENTER_BREAK and positionConfirmed  then
     calibrationState = 1
     positionConfirmed = 0
+    positionHold = 1
+    holdTimer = getTime()
   end
   return 0
 end
