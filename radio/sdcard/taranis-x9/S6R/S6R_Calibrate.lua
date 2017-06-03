@@ -14,6 +14,10 @@ local calibrationStep = 0
 local pages = {}
 local fields = {}
 local modifications = {}
+local positionConfirmed = 0
+local positionHold = 0
+local holdTimer = 0
+local orientationAutoSense = 0
 
 local calibrationFields = {
   {"X:", VALUE, 0x9E, 0, -100, 100, "%"},
@@ -132,6 +136,9 @@ local function refreshNext()
             local b2 = math.floor(value / 256)
             value = b1*256 + b2
             value = value - bit32.band(value, 0x8000) * 2
+            if ((getTime()-100) > holdTimer) then
+              positionHold = 0
+            end
           end
           if field[2] == COMBO and #field == 6 then
             for index = 1, #(field[6]), 1 do
@@ -193,9 +200,53 @@ local function runFieldsPage(event)
   return 0
 end
 
+
+local function drawPositionHoldScreen()
+  lcd.clear()
+  lcd.drawText(4, 5, "DO  NOT MOVE RECEIVER", DBLSIZE)
+  lcd.drawText(40, 35, "CALIBRATING", DBLSIZE+BLINK)
+end
+
 local calibrationPositionsBitmaps = { "bmp/up.bmp", "bmp/down.bmp", "bmp/left.bmp", "bmp/right.bmp", "bmp/forward.bmp", "bmp/back.bmp"  }
 
+local function drawCalibrationOrientation(x, y, step)
+    local orientation = { {"Label up.", "", 0, 0, 1000, 0, 0, 1000},
+                            {"Label down.", "", 0, 0, -1000, 0, 0, -1000},
+                            {"Pins Up.", "", -1000, 0, 0, 1000, 0, 0},
+                            {"Pins Down.", "", 1000, 0, 0, -1000, 0, 0},
+                            {"Label facing you", "Pins Right", 0, 1000, 0, 0, -1000, 0},
+                            {"Label facing you", "Pins Left", 0, -1000 , 0, 0, 1000, 0} }
+
+    lcd.drawText(0, 9, "Place the S6R as follows:", 0)
+    lcd.drawPixmap(140, 19, calibrationPositionsBitmaps[1 + calibrationStep])
+    lcd.drawText(x-9, y, orientation[step][1])
+    lcd.drawText(x-9, y+10, orientation[step][2])
+    local positionStatus = 0
+
+    for index = 1, 3, 1 do
+      local field = fields[index]
+      lcd.drawText(90, 12+10*index, field[1], 0)
+      if math.abs(field[4] - orientation[step][2+index+orientationAutoSense]) < 200 then
+        lcd.drawNumber(100, 12+10*index, field[4]/10, LEFT+PREC2)
+        positionStatus = positionStatus + 1
+      else
+        lcd.drawNumber(100, 12+10*index, field[4]/10, LEFT+PREC2+INVERS)
+      end
+    end
+    if step == 3 and positionStatus == 2 then -- orientation auto sensing
+      orientationAutoSense = 3 - orientationAutoSense
+    end
+    if positionStatus == 3 then
+      lcd.drawText(0, 56, " [Enter] to validate          ", INVERS)
+      positionConfirmed = 1
+    end
+end
+
 local function runCalibrationPage(event)
+  if (positionHold == 1) then
+    drawPositionHoldScreen()
+    return 0
+  end
   fields = calibrationFields
   if refreshIndex == #fields then
     refreshIndex = 0
@@ -203,16 +254,9 @@ local function runCalibrationPage(event)
   lcd.clear()
   lcd.drawScreenTitle("S6R", page, #pages)
   if(calibrationStep < 6) then
-    lcd.drawText(0, 9, "Turn the S6R as shown", 0)
-    lcd.drawPixmap(10, 19, calibrationPositionsBitmaps[1 + calibrationStep])
-    for index = 1, 3, 1 do
-      local field = fields[index]
-      lcd.drawText(80, 12+10*index, field[1], 0)
-      lcd.drawNumber(90, 12+10*index, field[4]/10, LEFT+PREC2)
-    end
+    drawCalibrationOrientation(10, 24, 1 + calibrationStep)
 
     local attr = calibrationState == 0 and INVERS or 0
-    lcd.drawText(0, 56, "Press [Enter] when ready", attr)
   else
     lcd.drawText(0, 9, "Calibration completed", 0)
     lcd.drawPixmap(10, 19, "bmp/done.bmp")
@@ -220,12 +264,11 @@ local function runCalibrationPage(event)
   end
   if calibrationStep > 6 and (event == EVT_ENTER_BREAK or event == EVT_EXIT_BREAK) then
     return 2
-  elseif event == EVT_ENTER_BREAK then
+  elseif event == EVT_ENTER_BREAK and positionConfirmed  then
     calibrationState = 1
-  elseif event == EVT_EXIT_BREAK then
-    if calibrationStep > 0 then
-      calibrationStep = 0
-    end
+    positionConfirmed = 0
+    positionHold = 1
+    holdTimer = getTime()
   end
   return 0
 end
