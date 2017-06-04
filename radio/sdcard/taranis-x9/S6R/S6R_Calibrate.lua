@@ -37,6 +37,8 @@ local function selectPage(step)
   refreshIndex = 0
   calibrationStep = 0
   pageOffset = 0
+  positionConfirmed = 0
+  positionHold = 0
 end
 
 -- Draw initial warning page
@@ -138,6 +140,7 @@ local function refreshNext()
             value = value - bit32.band(value, 0x8000) * 2
             if ((getTime()-100) > holdTimer) then
               positionHold = 0
+              holdTimer = 0
             end
           end
           if field[2] == COMBO and #field == 6 then
@@ -204,7 +207,8 @@ end
 local function drawPositionHoldScreen()
   lcd.clear()
   lcd.drawText(4, 5, "DO  NOT MOVE RECEIVER", DBLSIZE)
-  lcd.drawText(40, 35, "CALIBRATING", DBLSIZE+BLINK)
+  lcd.drawText(40, 30, "CALIBRATING", DBLSIZE+BLINK)
+  -- lcd.drawText(20, 52, "X:"..(fields[1][4]/1000).." Y:"..(fields[2][4]/1000).." Z:"..(fields[3][4]/1000), SMLSIZE+PREC2)
 end
 
 local calibrationPositionsBitmaps = { "bmp/up.bmp", "bmp/down.bmp", "bmp/left.bmp", "bmp/right.bmp", "bmp/forward.bmp", "bmp/back.bmp"  }
@@ -264,7 +268,7 @@ local function runCalibrationPage(event)
   end
   if calibrationStep > 6 and (event == EVT_ENTER_BREAK or event == EVT_EXIT_BREAK) then
     return 2
-  elseif event == EVT_ENTER_BREAK and positionConfirmed  then
+  elseif event == EVT_ENTER_BREAK and (positionConfirmed == 1)  then
     calibrationState = 1
     positionConfirmed = 0
     positionHold = 1
@@ -293,7 +297,11 @@ local function run(event)
     killEvents(event);
     selectPage(-1)
   end
-
+  if (holdTimer ~= 0) and (getTime()-holdTimer > 2000) then
+    holdTimer=0
+    selectPage(-1)
+    return 0
+  end
   local result = pages[page](event)
   refreshNext()
 
