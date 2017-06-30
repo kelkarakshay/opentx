@@ -822,6 +822,7 @@
   #define BT_DMA_Stream_RX             DMA1_Stream1
   #define BT_DMA_Channel_RX            DMA_Channel_4
 #else
+  #define BT_RCC_AHB1Periph            0
   #define BT_RCC_APB1Periph            0
   #define BT_RCC_APB2Periph            0
 #endif
