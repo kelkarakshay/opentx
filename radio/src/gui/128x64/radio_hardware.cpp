@@ -111,6 +111,7 @@ enum MenuRadioHardwareItems {
   ITEM_RADIO_HARDWARE_SD,
   ITEM_RADIO_HARDWARE_SF,
   ITEM_RADIO_HARDWARE_SH,
+  ITEM_RADIO_HARDWARE_BLUETOOTH,
   ITEM_RADIO_HARDWARE_JITTER_FILTER,
   ITEM_RADIO_HARDWARE_MAX
 };
@@ -122,7 +123,7 @@ enum MenuRadioHardwareItems {
 
 void menuRadioHardware(event_t event)
 {
-  MENU(STR_HARDWARE, menuTabGeneral, MENU_RADIO_HARDWARE, ITEM_RADIO_HARDWARE_MAX, { LABEL(Sticks), 0, 0, 0, 0, LABEL(Pots), POTS_ROWS, LABEL(Switches), SWITCHES_ROWS, 0 });
+  MENU(STR_HARDWARE, menuTabGeneral, MENU_RADIO_HARDWARE, ITEM_RADIO_HARDWARE_MAX, { LABEL(Sticks), 0, 0, 0, 0, LABEL(Pots), POTS_ROWS, LABEL(Switches), SWITCHES_ROWS, 1, 0 });
 
   uint8_t sub = menuVerticalPosition;
 
@@ -192,6 +193,15 @@ void menuRadioHardware(event_t event)
         }
         break;
       }
+
+      case ITEM_RADIO_HARDWARE_BLUETOOTH:
+        lcdDrawTextAlignedLeft(y, "Bluetooth");
+        drawCheckBox(HW_SETTINGS_COLUMN+5*FW, y, g_eeGeneral.bluetoothEnable, menuHorizontalPosition == 0 ? attr : 0);
+        if (attr && menuHorizontalPosition == 0) {
+          g_eeGeneral.bluetoothEnable = checkIncDecGen(event, g_eeGeneral.bluetoothEnable, 0, 1);
+        }
+        editName(HW_SETTINGS_COLUMN+6*FW+2, y, g_eeGeneral.bluetoothName, LEN_BLUETOOTH_NAME, event, menuHorizontalPosition == 1 ? attr : 0);
+        break;
 
       case ITEM_RADIO_HARDWARE_JITTER_FILTER:
       {
