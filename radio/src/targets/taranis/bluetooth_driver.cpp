@@ -48,9 +48,6 @@ void bluetoothInit(uint32_t baudrate)
   USART_InitTypeDef USART_InitStructure;
 
   USART_DeInit(BT_USART);
-
-  RCC_AHB1PeriphClockCmd(BT_RCC_AHB1Periph, ENABLE);
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART6, ENABLE);
   
   GPIO_InitStructure.GPIO_Pin = BT_EN_GPIO_PIN;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
@@ -106,7 +103,7 @@ void bluetoothDone()
   GPIO_SetBits(BT_EN_GPIO, BT_EN_GPIO_PIN); // close bluetooth
 }
 
-extern "C" void USART6_IRQHandler(void)
+extern "C" void BT_USART_IRQHandler(void)
 {
   DEBUG_INTERRUPT(INT_BLUETOOTH);
   if (USART_GetITStatus(BT_USART, USART_IT_RXNE) != RESET) {
@@ -167,6 +164,11 @@ void bluetoothWriteWakeup(void)
 
 void bluetoothWakeup(void)
 {
+#if defined(BLUETOOTH_CLI_PASSTHROUGH)
+  bluetoothWriteWakeup();
+  return;
+#endif
+
   if (!g_eeGeneral.bluetoothEnable) {
     if (bluetoothState != BLUETOOTH_INIT) {
       bluetoothDone();

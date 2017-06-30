@@ -153,6 +153,7 @@ void menuRadioHardware(event_t event)
         g_eeGeneral.potsConfig |= (potType << shift);
         break;
       }
+
       case ITEM_RADIO_HARDWARE_LABEL_SWITCHES:
         lcdDrawTextAlignedLeft(y, STR_SWITCHES);
         break;
@@ -191,6 +192,7 @@ void menuRadioHardware(event_t event)
         }
         break;
       }
+
 #if defined(PCBX9E)
       case ITEM_RADIO_HARDWARE_BLUETOOTH:
         lcdDrawTextAlignedLeft(y, "Bluetooth");
@@ -201,12 +203,14 @@ void menuRadioHardware(event_t event)
         editName(HW_SETTINGS_COLUMN+5*FW, y, g_eeGeneral.bluetoothName, LEN_BLUETOOTH_NAME, event, menuHorizontalPosition == 1 ? attr : 0);
         break;
 #endif
+
       case ITEM_RADIO_HARDWARE_UART3_MODE:
         g_eeGeneral.serial2Mode = editChoice(HW_SETTINGS_COLUMN, y, STR_UART3MODE, STR_UART3MODES, g_eeGeneral.serial2Mode, 0, UART_MODE_MAX, attr, event);
         if (attr && checkIncDec_Ret) {
           serial2Init(g_eeGeneral.serial2Mode, modelTelemetryProtocol());
         }
         break;
+
       case ITEM_RADIO_HARDWARE_JITTER_FILTER:
       {
         uint8_t b = 1-g_eeGeneral.jitterFilter;

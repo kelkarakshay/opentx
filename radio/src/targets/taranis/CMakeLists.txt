@@ -71,6 +71,7 @@ elseif(PCB STREQUAL X7)
   add_definitions(-DPCBX7 -DSOFTWARE_VOLUME)
   add_definitions(-DEEPROM_VARIANT=0x4000)
   add_definitions(-DPWR_BUTTON_${PWR_BUTTON})
+  add_definitions(-DBLUETOOTH)
   set(FIRMWARE_TARGET_SRC
     ${FIRMWARE_TARGET_SRC}
     bluetooth_driver.cpp
@@ -78,6 +79,12 @@ elseif(PCB STREQUAL X7)
   set(GUI_DIR 128x64)
   set(BITMAPS_TARGET 9x_bitmaps)
   set(LCD_DRIVER lcd_driver_spi.cpp)
+endif()
+
+option(BLUETOOTH_CLI_PASSTHROUGH "Enable direct communicaton with Bluetooth module from CLI" NO)
+if(BLUETOOTH_CLI_PASSTHROUGH)
+  add_definitions(-DBLUETOOTH_CLI_PASSTHROUGH)
+  message("Taranis: Bluetooth pass-trough enabled")
 endif()
 
 set(HSE_VALUE 12000000)
