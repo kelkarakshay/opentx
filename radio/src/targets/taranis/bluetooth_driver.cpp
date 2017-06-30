@@ -140,6 +140,11 @@ void bluetoothWriteString(const char * str)
   }
 }
 
+void bluetoothWriteCRLF()
+{
+  bluetoothWriteString("\r\n");
+}
+
 void bluetoothWriteWakeup(void)
 {
   if (bluetoothWriteState == BLUETOOTH_WRITE_IDLE) {
@@ -162,6 +167,16 @@ void bluetoothWriteWakeup(void)
   }
 }
 
+#if defined(PCBX7)
+#define BLUETOOTH_COMMAND_NAME         "AT+NAME"
+#define BLUETOOTH_ANSWER_NAME          "OK+Name"
+#define BLUETOOTH_COMMAND_BAUD_115200  "AT+BAUD115200"
+#else
+#define BLUETOOTH_COMMAND_NAME         "TTM:REN-"
+#define BLUETOOTH_ANSWER_NAME          "TTM:REN"
+#define BLUETOOTH_COMMAND_BAUD_115200  "TTM:BPS-115200"
+#endif
+
 void bluetoothWakeup(void)
 {
 #if defined(BLUETOOTH_CLI_PASSTHROUGH)
@@ -181,18 +196,27 @@ void bluetoothWakeup(void)
 
       if (bluetoothState == BLUETOOTH_INIT) {
         bluetoothInit(BLUETOOTH_DEFAULT_BAUDRATE);
-        const char btMessage[] = "TTM:REN-";
-        bluetoothWriteString(btMessage);
+        bluetoothWriteString(BLUETOOTH_COMMAND_NAME);
         uint8_t len = ZLEN(g_eeGeneral.bluetoothName);
-        for (int i=0; i<len; i++) {
-          btTxFifo.push(idx2char(g_eeGeneral.bluetoothName[i]));
+        if (len > 0) {
+          for (int i = 0; i < len; i++) {
+            btTxFifo.push(idx2char(g_eeGeneral.bluetoothName[i]));
+          }
         }
+        else {
+#if defined(PCBHORUS)
+          bluetoothWriteString("Horus");
+#else
+          bluetoothWriteString("Taranis");
+#endif
+        }
+        bluetoothWriteCRLF();
         bluetoothState = BLUETOOTH_WAIT_TTM;
         waitEnd = get_tmr10ms() + 25; // 250ms
       }
       else if (bluetoothState == BLUETOOTH_WAIT_TTM) {
         if (get_tmr10ms() > waitEnd) {
-          char ttm[] = "TTM:REN";
+          char ttm[] = BLUETOOTH_ANSWER_NAME;
           int index = 0;
           uint8_t c;
           bool found = false;
@@ -213,7 +237,7 @@ void bluetoothWakeup(void)
           }
           else {
             bluetoothInit(BLUETOOTH_FACTORY_BAUDRATE);
-            const char btMessage[] = "TTM:BPS-115200";
+            const char btMessage[] = BLUETOOTH_COMMAND_BAUD_115200 "\r\n";
             bluetoothWriteString(btMessage);
             bluetoothState = BLUETOOTH_WAIT_BAUDRATE_CHANGE;
             waitEnd = get_tmr10ms() + 250; // 2.5s
