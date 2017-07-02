@@ -751,6 +751,7 @@
 #define TR_MENUDIAG            TR("SWITCHES", "SWITCH TEST")
 #define TR_MENUANA             TR("ANAS", "ANALOG INPUTS")
 #define TR_MENUCALIBRATION     "CALIBRATION"
+#define TR_CROSSTRIMS          "Cross Trims"
 #if defined(COLORLCD)
   #define TR_TRIMS2OFFSETS     "Trims >> Subtrims"
 #else

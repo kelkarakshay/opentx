@@ -467,6 +467,7 @@ extern const pm_char STR_SWITCHES_DELAY[];
 extern const pm_char STR_SLAVE[];
 extern const pm_char STR_MODESRC[];
 extern const pm_char STR_MULTIPLIER[];
+extern const pm_char STR_CROSSTRIMS[];
 #define LEN_MULTIPLIER PSIZE(TR_MULTIPLIER)
 extern const pm_char STR_CAL[];
 extern const pm_char STR_VTRIM[];

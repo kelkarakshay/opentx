@@ -103,6 +103,7 @@ enum menuGeneralSetupItems {
   ITEM_SETUP_RX_CHANNEL_ORD,
   ITEM_SETUP_STICK_MODE_LABELS,
   ITEM_SETUP_STICK_MODE,
+  ITEM_SETUP_CROSSTRIMS,
   ITEM_SETUP_MAX
 };
 
@@ -507,6 +508,12 @@ void menuGeneralSetup(uint8_t event)
           clearKeyEvents();
         }
         break;
+
+      case ITEM_SETUP_CROSSTRIMS:
+      {
+        g_eeGeneral.crossTrims = onoffMenuItem(g_eeGeneral.crossTrims, RADIO_SETUP_2ND_COLUMN, y, STR_CROSSTRIMS, attr, event);
+        break;
+      }
     }
   }
 }

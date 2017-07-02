@@ -791,6 +791,7 @@ PACK(typedef struct {
   int8_t    speakerVolume;
   int8_t    vBatMin;
   int8_t    vBatMax;
+  uint8_t   crossTrims;
 
   EXTRA_GENERAL_FIELDS
 
